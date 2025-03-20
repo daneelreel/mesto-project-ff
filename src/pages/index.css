@@ -41,13 +41,7 @@
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   }
   
-  .popup__input {
-    display: block;
-    width: 100%;
-    margin-bottom: 20px;
-    color: #C4C4C4;
-    border-bottom: 1px solid #C4C4C4;
-  }
+
   
   .popup__button {
     display: block;

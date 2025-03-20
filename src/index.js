@@ -5,19 +5,6 @@ import { createCard, removeCard, handleLike } from './components/card';
 import { openPopup, closePopup, closePopupOnOverlayClick } from './components/modal';
 
 const cardsList = document.querySelector('.places__list');
-const pictureAvatar = new URL('./images/avatar.jpg', import.meta.url);
-const cardOne = new URL('./images/card_1.jpg', import.meta.url);
-const cardTwo = new URL('./images/card_2.jpg', import.meta.url);
-const cardThree = new URL('./images/card_3.jpg', import.meta.url)
-
-const whoIsTheGoat = [
-  { name: 'Picture Avatar', link: pictureAvatar },
-  { name: 'Card One', link: cardOne },
-  { name: 'Card Two', link: cardTwo },
-  { name: 'Card Three', link: cardThree },
-];
-
-// Информация карточек
 const initialCards = [ 
   { 
     name: "Архыз", 
@@ -81,20 +68,22 @@ const profileName = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
 
 profileEditButton.addEventListener('click', () => {
-  nameInput.value = profileName.textContent;
-  descriptionInput.value = profileDescription.textContent;
+  nameInput.placeholder = profileName.textContent;
+  descriptionInput.placeholder = profileDescription.textContent;
+  nameInput.value = '';
+  descriptionInput.value = '';
   openPopup(editProfilePopup);
+});
+
+editProfileForm.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+  if (nameInput.value.trim()) profileName.textContent = nameInput.value;
+  if (descriptionInput.value.trim()) profileDescription.textContent = descriptionInput.value;
+  closePopup(editProfilePopup);
 });
 
 editProfileCloseButton.addEventListener('click', () => closePopup(editProfilePopup));
 closePopupOnOverlayClick(editProfilePopup);
-
-editProfileForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
-  profileName.textContent = nameInput.value;
-  profileDescription.textContent = descriptionInput.value;
-  closePopup(editProfilePopup);
-});
 
 // Попап для добавления новой карточки
 const addCardButton = document.querySelector('.profile__add-button');

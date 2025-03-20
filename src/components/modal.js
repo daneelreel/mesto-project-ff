@@ -1,25 +1,23 @@
-
+//modal.js
 
 // Открытие попапа
-export function openPopup(popup) {
+  export function openPopup(popup) {
     popup.classList.add('popup_opened');
-    document.addEventListener('keydown', handleEscClose(popup));
+    document.addEventListener('keydown', handleEscClose);
   }
   
   // Закрытие
   export function closePopup(popup) {
     popup.classList.remove('popup_opened');
-    document.removeEventListener('keydown', handleEscClose(popup));
+    document.removeEventListener('keydown', handleEscClose);
   }
   
   // Закрытие клавишей ESC
-  export function handleEscClose(popup) {
-    return (evt) => {
-      if (evt.key === 'Escape') {
-        closePopup(popup);
-      }
-    };
-  }
+  export function handleEscClose(evt) {
+    if(evt.key === 'Escape') {
+       closePopup(document.querySelector('.popup_opened'));
+    }
+ }
   
   // Закрытие кликом на оверлей
   export function closePopupOnOverlayClick(popup) {
