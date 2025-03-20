@@ -77,8 +77,8 @@ profileEditButton.addEventListener('click', () => {
 
 editProfileForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
-  if (nameInput.value.trim()) profileName.textContent = nameInput.value;
-  if (descriptionInput.value.trim()) profileDescription.textContent = descriptionInput.value;
+  if (nameInput.value) profileName.textContent = nameInput.value;
+  if (descriptionInput.value) profileDescription.textContent = descriptionInput.value;
   closePopup(editProfilePopup);
 });
 
