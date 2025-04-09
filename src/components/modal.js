@@ -1,4 +1,3 @@
-//modal.js
 
 // Открытие попапа
   export function openPopup(popup) {

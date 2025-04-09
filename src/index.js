@@ -1,47 +1,41 @@
-// @todo: Темплейт карточки
 
 import './pages/index.css';
 import { createCard, removeCard, handleLike } from './components/card';
 import { openPopup, closePopup, closePopupOnOverlayClick } from './components/modal';
+import { enableValidation, clearValidation } from './components/validation';
+import { getUserInfo, getCards, updateProfile, addCard, updateAvatar } from './components/api.js';
+
 
 const cardsList = document.querySelector('.places__list');
-const initialCards = [ 
-  { 
-    name: "Архыз", 
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg", 
-  }, 
-  { 
-    name: "Челябинская область", 
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/chelyabinsk-oblast.jpg", 
-  }, 
-  { 
-    name: "Иваново", 
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/ivanovo.jpg", 
-  }, 
-  { 
-    name: "Камчатка", 
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kamchatka.jpg", 
-  }, 
-  { 
-    name: "Холмогорский район", 
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kholmogorsky-rayon.jpg", 
-  }, 
-  { 
-    name: "Байкал", 
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/baikal.jpg", 
-  } 
-]; 
+const initialCards = [
+  {
+    name: "Архыз",
+    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg",
+  },
+  {
+    name: "Челябинская область",
+    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/chelyabinsk-oblast.jpg",
+  },
+  {
+    name: "Иваново",
+    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/ivanovo.jpg",
+  },
+  {
+    name: "Камчатка",
+    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kamchatka.jpg",
+  },
+  {
+    name: "Холмогорский район",
+    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kholmogorsky-rayon.jpg",
+  },
+  {
+    name: "Байкал",
+    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/baikal.jpg",
+  }
+];
 
-// Загружаем карточки
-for (let i = 0; i < initialCards.length; i++) {
-  const card = createCard(
-    initialCards[i], 
-    { openImagePopup: openImagePopup, removeCard: removeCard, handleLike: handleLike } 
-  ); 
-  cardsList.append(card); 
-} 
 
-// Попап с изображением
+
 const imagePopup = document.querySelector('.popup_type_image');
 const imagePopupImage = imagePopup.querySelector('.popup__image');
 const imagePopupCaption = imagePopup.querySelector('.popup__caption');
@@ -57,7 +51,6 @@ function openImagePopup(link, caption) {
   openPopup(imagePopup);
 }
 
-// Попап с редактированием профиля
 const profileEditButton = document.querySelector('.profile__edit-button');
 const editProfilePopup = document.querySelector('.popup_type_edit');
 const editProfileCloseButton = editProfilePopup.querySelector('.popup__close');
@@ -67,39 +60,36 @@ const descriptionInput = editProfilePopup.querySelector('.popup__input_type_desc
 const profileName = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
 
-profileEditButton.addEventListener('click', () => {
-  nameInput.placeholder = profileName.textContent;
-  descriptionInput.placeholder = profileDescription.textContent;
-  nameInput.value = '';
-  descriptionInput.value = '';
-  openPopup(editProfilePopup);
+// Включение валидации
+enableValidation({
+  formSelector: '.popup__form',
+  inputSelector: '.popup__input',
+  submitButtonSelector: '.popup__button',
+  minLength: 2,
+  maxLength: 40,
+  regex: /^[a-zA-Zа-яА-ЯёЁ\s-]+$/,
 });
 
-editProfileForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
-  if (nameInput.value) profileName.textContent = nameInput.value;
-  if (descriptionInput.value) profileDescription.textContent = descriptionInput.value;
-  closePopup(editProfilePopup);
+// Сбрасываем ошибки при открытии попапа
+profileEditButton.addEventListener('click', () => {
+  nameInput.value = profileName.textContent;
+  descriptionInput.value = profileDescription.textContent;
+  clearValidation(editProfileForm, {
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+  });
+  openPopup(editProfilePopup);
 });
 
 editProfileCloseButton.addEventListener('click', () => closePopup(editProfilePopup));
 closePopupOnOverlayClick(editProfilePopup);
 
-// Попап для добавления новой карточки
 const addCardButton = document.querySelector('.profile__add-button');
 const newCardPopup = document.querySelector('.popup_type_new-card');
 const newCardForm = newCardPopup.querySelector('.popup__form');
 const cardNameInput = newCardPopup.querySelector('.popup__input_type_card-name');
 const cardLinkInput = newCardPopup.querySelector('.popup__input_type_url');
 const newCardCloseButton = newCardPopup.querySelector('.popup__close');
-
-addCardButton.addEventListener('click', () => {
-  newCardForm.reset();
-  openPopup(newCardPopup);
-});
-
-newCardCloseButton.addEventListener('click', () => closePopup(newCardPopup));
-closePopupOnOverlayClick(newCardPopup);
 
 newCardForm.addEventListener('submit', (evt) => {
   evt.preventDefault();
@@ -111,4 +101,125 @@ newCardForm.addEventListener('submit', (evt) => {
   );
   cardsList.prepend(newCard);
   closePopup(newCardPopup);
+  newCardForm.reset();
+  clearValidation(newCardForm, {
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+  });
 });
+
+addCardButton.addEventListener('click', () => {
+  newCardForm.reset();
+  clearValidation(newCardForm, {
+    inputSelector: '.popup__input',
+    submitButtonSelector: '.popup__button',
+  });
+  openPopup(newCardPopup);
+});
+
+newCardCloseButton.addEventListener('click', () => closePopup(newCardPopup));
+closePopupOnOverlayClick(newCardPopup);
+
+
+
+//Получение информации о пользователе
+
+const token = 'f5953821-765c-46ef-84fb-8e85d777588f';
+const cohortId = 'wff-cohort-35';
+
+Promise.all([getUserInfo(cohortId, token), getCards(cohortId, token)])
+  .then(([userData, cards]) => {
+    const userId = userData._id; // сохраняем id текущего пользователя
+    
+    profileName.textContent = userData.name;
+    profileDescription.textContent = userData.about;
+    document.querySelector('.profile__image').style.backgroundImage = `url(${userData.avatar})`;
+
+    // Отображаем карточки
+    cards.forEach(cardInfo => {
+      const card = createCard(
+        cardInfo,
+        userId,
+        { openImagePopup, removeCard, handleLike }
+      );
+      cardsList.append(card);
+    });
+  })
+  .catch(err => {
+    console.error(err);
+  });
+
+  
+  editProfileForm.addEventListener('submit', (evt) => {
+    evt.preventDefault();
+    const submitButton = editProfileForm.querySelector('.popup__button');
+    submitButton.textContent = 'Сохранение...';
+  
+    updateProfile(nameInput.value, descriptionInput.value)
+      .then(() => {
+        closePopup(editProfilePopup);
+      })
+      .finally(() => {
+        submitButton.textContent = 'Сохранить'; 
+      });
+  });
+  
+  
+  newCardForm.addEventListener('submit', (evt) => {
+    evt.preventDefault();
+    const submitButton = newCardForm.querySelector('.popup__button');
+    submitButton.textContent = 'Сохранение...';
+  
+    addCard(cardNameInput.value, cardLinkInput.value)
+      .then(() => {
+        closePopup(newCardPopup);
+        newCardForm.reset();
+        clearValidation(newCardForm, {
+          inputSelector: '.popup__input',
+          submitButtonSelector: '.popup__button',
+        });
+      })
+      .finally(() => {
+        submitButton.textContent = 'Сохранить'; 
+      });
+  });
+  
+
+  
+const editAvatarIcon = document.querySelector('.overlay');
+const avatarEditPopup = document.querySelector('.popup_type_new-profile__picture');
+const avatarForm = avatarEditPopup.querySelector('.popup__form');
+const avatarInput = avatarEditPopup.querySelector('.popup__input_type_url_new-profile__picture');
+const avatarCloseButton = avatarEditPopup.querySelector('.popup__close'); 
+
+// Открытие попапа редактирования аватара
+editAvatarIcon.addEventListener('click', () => {
+  openPopup(avatarEditPopup);
+  closePopupOnOverlayClick(avatarEditPopup); 
+});
+
+avatarCloseButton.addEventListener('click', () => {
+  closePopup(avatarEditPopup);
+});
+
+// Обработка отправки формы обновления аватара
+avatarForm.addEventListener('submit', (evt) => {
+  evt.preventDefault();
+  const submitButton = avatarForm.querySelector('.popup__button');
+  submitButton.textContent = 'Сохранение...';
+
+  updateAvatar(avatarInput.value)
+    .then(() => {
+      closePopup(avatarEditPopup);
+      avatarForm.reset();
+      clearValidation(avatarForm, {
+        inputSelector: '.popup__input',
+        submitButtonSelector: '.popup__button',
+      });
+    })
+    .finally(() => {
+      submitButton.textContent = 'Сохранить'; 
+    });
+});
+
+
