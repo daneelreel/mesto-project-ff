@@ -4,38 +4,10 @@ import { createCard, removeCard, handleLike } from './components/card';
 import { openPopup, closePopup, closePopupOnOverlayClick } from './components/modal';
 import { enableValidation, clearValidation } from './components/validation';
 import { getUserInfo, getCards, updateProfile, addCard, updateAvatar } from './components/api.js';
+import { initialCards } from './components/data.js';
 
 
 const cardsList = document.querySelector('.places__list');
-const initialCards = [
-  {
-    name: "Архыз",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/arkhyz.jpg",
-  },
-  {
-    name: "Челябинская область",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/chelyabinsk-oblast.jpg",
-  },
-  {
-    name: "Иваново",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/ivanovo.jpg",
-  },
-  {
-    name: "Камчатка",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kamchatka.jpg",
-  },
-  {
-    name: "Холмогорский район",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/kholmogorsky-rayon.jpg",
-  },
-  {
-    name: "Байкал",
-    link: "https://pictures.s3.yandex.net/frontend-developer/cards-compressed/baikal.jpg",
-  }
-];
-
-
-
 const imagePopup = document.querySelector('.popup_type_image');
 const imagePopupImage = imagePopup.querySelector('.popup__image');
 const imagePopupCaption = imagePopup.querySelector('.popup__caption');
@@ -59,6 +31,7 @@ const nameInput = editProfilePopup.querySelector('.popup__input_type_name');
 const descriptionInput = editProfilePopup.querySelector('.popup__input_type_description');
 const profileName = document.querySelector('.profile__title');
 const profileDescription = document.querySelector('.profile__description');
+const profileImage = document.querySelector('.profile__image');
 
 // Включение валидации
 enableValidation({
@@ -91,23 +64,6 @@ const cardNameInput = newCardPopup.querySelector('.popup__input_type_card-name')
 const cardLinkInput = newCardPopup.querySelector('.popup__input_type_url');
 const newCardCloseButton = newCardPopup.querySelector('.popup__close');
 
-newCardForm.addEventListener('submit', (evt) => {
-  evt.preventDefault();
-  const cardTitle = cardNameInput.value;
-  const cardLink = cardLinkInput.value;
-  const newCard = createCard(
-    { name: cardTitle, link: cardLink },
-    { openImagePopup, removeCard, handleLike }
-  );
-  cardsList.prepend(newCard);
-  closePopup(newCardPopup);
-  newCardForm.reset();
-  clearValidation(newCardForm, {
-    inputSelector: '.popup__input',
-    submitButtonSelector: '.popup__button',
-  });
-});
-
 addCardButton.addEventListener('click', () => {
   newCardForm.reset();
   clearValidation(newCardForm, {
@@ -124,18 +80,14 @@ closePopupOnOverlayClick(newCardPopup);
 
 //Получение информации о пользователе
 
-const token = 'f5953821-765c-46ef-84fb-8e85d777588f';
-const cohortId = 'wff-cohort-35';
-
-Promise.all([getUserInfo(cohortId, token), getCards(cohortId, token)])
+Promise.all([getUserInfo(), getCards()])
   .then(([userData, cards]) => {
-    const userId = userData._id; // сохраняем id текущего пользователя
+    const userId = userData._id;
     
     profileName.textContent = userData.name;
     profileDescription.textContent = userData.about;
-    document.querySelector('.profile__image').style.backgroundImage = `url(${userData.avatar})`;
+    profileImage.style.backgroundImage = `url(${userData.avatar})`; 
 
-    // Отображаем карточки
     cards.forEach(cardInfo => {
       const card = createCard(
         cardInfo,
@@ -148,7 +100,6 @@ Promise.all([getUserInfo(cohortId, token), getCards(cohortId, token)])
   .catch(err => {
     console.error(err);
   });
-
   
   editProfileForm.addEventListener('submit', (evt) => {
     evt.preventDefault();
@@ -156,14 +107,16 @@ Promise.all([getUserInfo(cohortId, token), getCards(cohortId, token)])
     submitButton.textContent = 'Сохранение...';
   
     updateProfile(nameInput.value, descriptionInput.value)
-      .then(() => {
+      .then((userData) => {
+        profileName.textContent = userData.name;
+        profileDescription.textContent = userData.about;
         closePopup(editProfilePopup);
       })
+      .catch(err => console.error(err))
       .finally(() => {
         submitButton.textContent = 'Сохранить'; 
       });
   });
-  
   
   newCardForm.addEventListener('submit', (evt) => {
     evt.preventDefault();
@@ -171,7 +124,14 @@ Promise.all([getUserInfo(cohortId, token), getCards(cohortId, token)])
     submitButton.textContent = 'Сохранение...';
   
     addCard(cardNameInput.value, cardLinkInput.value)
-      .then(() => {
+      .then((cardInfo) => {
+        const newCard = createCard(
+          cardInfo, 
+          cardInfo.owner._id, 
+          { openImagePopup, removeCard, handleLike }
+        );
+        cardsList.prepend(newCard);
+  
         closePopup(newCardPopup);
         newCardForm.reset();
         clearValidation(newCardForm, {
@@ -179,12 +139,12 @@ Promise.all([getUserInfo(cohortId, token), getCards(cohortId, token)])
           submitButtonSelector: '.popup__button',
         });
       })
+      .catch(err => console.error(err))
       .finally(() => {
         submitButton.textContent = 'Сохранить'; 
       });
   });
   
-
   
 const editAvatarIcon = document.querySelector('.overlay');
 const avatarEditPopup = document.querySelector('.popup_type_new-profile__picture');
@@ -209,7 +169,8 @@ avatarForm.addEventListener('submit', (evt) => {
   submitButton.textContent = 'Сохранение...';
 
   updateAvatar(avatarInput.value)
-    .then(() => {
+    .then((userData) => {
+      profileImage.style.backgroundImage = `url(${userData.avatar})`;
       closePopup(avatarEditPopup);
       avatarForm.reset();
       clearValidation(avatarForm, {
@@ -217,9 +178,11 @@ avatarForm.addEventListener('submit', (evt) => {
         submitButtonSelector: '.popup__button',
       });
     })
+    .catch(err => console.error(err))
     .finally(() => {
       submitButton.textContent = 'Сохранить'; 
     });
 });
+
 
 
